@@ -1,0 +1,4 @@
+{
+  "_comment": "Copy to creds.json. Keys are credential_ref names the recipes point at; values never reach the model.",
+  "site-id": { "username": "...", "password": "..." }
+}

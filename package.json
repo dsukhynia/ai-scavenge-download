@@ -1,0 +1,25 @@
+{
+  "name": "ai-scavenge-download",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sites": "tsx mock-sites/server.ts",
+    "discover": "tsx --env-file=.env src/discover.ts",
+    "replay": "tsx src/replay.ts",
+    "cycle": "tsx --env-file=.env src/cycle.ts",
+    "toolcheck": "tsx src/toolcheck.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.116.0",
+    "express": "^5.1.0",
+    "playwright": "^1.56.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

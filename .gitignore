@@ -1,0 +1,5 @@
+node_modules/
+downloads/
+traces/
+creds.json
+.env

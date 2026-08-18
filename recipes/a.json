@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "site_id": "a",
+  "goal": "Log in and download the latest monthly statement as a PDF.",
+  "steps": [
+    {
+      "action": "goto",
+      "url": "http://localhost:4000/a"
+    },
+    {
+      "action": "fill",
+      "anchor": {
+        "role": "textbox",
+        "name": "Username"
+      },
+      "credential_ref": "username"
+    },
+    {
+      "action": "fill",
+      "anchor": {
+        "role": "textbox",
+        "name": "Password"
+      },
+      "credential_ref": "password"
+    },
+    {
+      "action": "click",
+      "anchor": {
+        "role": "button",
+        "name": "Sign in"
+      }
+    },
+    {
+      "action": "click",
+      "anchor": {
+        "role": "link",
+        "name": "Reports"
+      }
+    },
+    {
+      "action": "download",
+      "anchor": {
+        "role": "link",
+        "name": "Download Monthly Statement"
+      }
+    }
+  ],
+  "expect": {
+    "content_type": "application/pdf",
+    "filename_pattern": "^northwind-statement(-\\d{4}(-\\d{2})?)?\\.pdf$",
+    "min_bytes": 200
+  },
+  "generated_at": "2026-08-16T15:45:29.740Z",
+  "generated_by": "claude-opus-5"
+}
