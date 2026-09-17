@@ -6,13 +6,9 @@
       "start_url": "http://localhost:4000/a",
       "goal": "Log in and download the latest monthly statement as a PDF.",
       "interval_days": 10,
-      "next_due_at": "2026-08-26",
-      "last_sha256": "76dee3330b61d89b6308830252a7f9f135e859c9a35917eae318a9a7a577094d",
-      "last_run": {
-        "at": "2026-08-16T15:45:30.038Z",
-        "status": "duplicate",
-        "detail": "downloads/a/2026-08-16/northwind-statement.pdf (602 bytes)"
-      }
+      "next_due_at": "2026-09-17",
+      "last_sha256": null,
+      "last_run": null
     },
     {
       "id": "b",
@@ -20,13 +16,9 @@
       "start_url": "http://localhost:4000/b",
       "goal": "Log in and download the latest invoice as a PDF.",
       "interval_days": 10,
-      "next_due_at": "2026-08-26",
-      "last_sha256": "3ac2c4ca5eb3c3911c800c08baab7d5bcae75a9a0c1d42d51d226d89c670558e",
-      "last_run": {
-        "at": "2026-08-16T15:45:49.118Z",
-        "status": "duplicate",
-        "detail": "downloads/b/2026-08-16/contoso-invoice.pdf (597 bytes)"
-      }
+      "next_due_at": "2026-09-17",
+      "last_sha256": null,
+      "last_run": null
     },
     {
       "id": "c",
@@ -34,13 +26,9 @@
       "start_url": "http://localhost:4000/c",
       "goal": "Log in, open the Document Center, filter to period 2026-Q2, and download that quarterly filing as a PDF.",
       "interval_days": 10,
-      "next_due_at": "2026-08-26",
-      "last_sha256": "359e12089ddaf53f31e220cdf92b8be22226cc42b9107995dc788f39a339be6f",
-      "last_run": {
-        "at": "2026-08-16T15:46:12.882Z",
-        "status": "duplicate",
-        "detail": "downloads/c/2026-08-16/filing-2026-Q2.pdf (594 bytes)"
-      }
+      "next_due_at": "2026-09-17",
+      "last_sha256": null,
+      "last_run": null
     }
   ]
 }

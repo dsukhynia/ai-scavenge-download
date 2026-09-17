@@ -14,9 +14,9 @@ const BROKEN = new Set((process.env.BREAK ?? "").split(",").filter(Boolean));
 
 /** Every portal accepts the same demo credentials. */
 const USERS: Record<string, { user: string; pass: string }> = {
-  a: { user: "acme-ops", pass: "hunter2" },
-  b: { user: "ops@acme.test", pass: "correct-horse" },
-  c: { user: "ACME001", pass: "4815" },
+  a: { user: "testa", pass: "testa" },
+  b: { user: "testb", pass: "testb" },
+  c: { user: "testc", pass: "testc" },
 };
 
 // ---------------------------------------------------------------- PDF

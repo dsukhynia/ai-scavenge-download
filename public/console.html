@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ai-scavenge-download console</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 1100px; }
+  h1 { font-size: 1.25rem; margin-bottom: 0.25rem; }
+  .sub { color: #888; margin-bottom: 1.5rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #8883; vertical-align: top; }
+  th { color: #888; font-weight: 600; }
+  button { font: inherit; padding: 0.25rem 0.6rem; margin: 0 0.15rem; cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: 0.5; }
+  .status-verified, .status-duplicate, .status-healed { color: #2a7a2a; }
+  .status-quarantined, .status-failed { color: #b83c3c; }
+  .badge { display: inline-block; padding: 0 0.4rem; border-radius: 3px; font-size: 0.75rem; }
+  .badge-yes { background: #2a7a2a33; }
+  .badge-no { background: #b83c3c33; }
+  #top { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+  #busy { color: #b8863c; }
+  pre#log {
+    background: #0008; color: #ddd; padding: 0.75rem; border-radius: 4px;
+    height: 260px; overflow-y: auto; font-size: 0.8rem; white-space: pre-wrap;
+  }
+  details.recipe pre { max-height: 300px; overflow-y: auto; font-size: 0.75rem; }
+  code { font-size: 0.85em; }
+</style>
+</head>
+<body>
+  <h1>ai-scavenge-download console</h1>
+  <div class="sub">discover / replay / heal are real actions — they open a browser and, for discover/heal, call the Claude API.</div>
+
+  <div id="top">
+    <button id="run-cycle">Run cycle (due sites)</button>
+    <label><input type="checkbox" id="force-cycle" /> force (ignore due dates)</label>
+    <button id="cleanup" title="Resets every site to never-run: clears registry due-dates/last-run/hash, deletes all recipes, and empties downloads/ and traces/. Credentials are untouched.">Cleanup / reset state</button>
+    <span id="busy"></span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Site</th><th>Next due</th><th>Last run</th><th>Recipe</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="sites"></tbody>
+  </table>
+
+  <h2>Log</h2>
+  <pre id="log">(no run yet)</pre>
+
+  <script>
+    const sitesBody = document.getElementById("sites");
+    const busyEl = document.getElementById("busy");
+    const logEl = document.getElementById("log");
+    let currentSource = null;
+    let openRecipe = null; // siteId currently expanded
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    async function refreshState() {
+      const res = await fetch("/api/state");
+      const { busy, sites } = await res.json();
+      busyEl.textContent = busy ? `running: ${busy.kind}${busy.siteId ? " (" + busy.siteId + ")" : ""}…` : "";
+      renderSites(sites, Boolean(busy));
+    }
+
+    function renderSites(sites, busy) {
+      // The recipe <pre> node gets torn down and rebuilt below, which would
+      // otherwise reset its scroll position on every 4s poll.
+      const openPre = sitesBody.querySelector("details.recipe pre");
+      const savedScroll = openPre ? openPre.scrollTop : 0;
+      sitesBody.innerHTML = "";
+      for (const s of sites) {
+        const tr = document.createElement("tr");
+        const status = s.last_run?.status ?? "never run";
+        const detail = s.last_run?.detail ?? "";
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(s.id)}</strong><br><span class="sub">${escapeHtml(s.name)}</span></td>
+          <td>${escapeHtml(s.next_due_at)}</td>
+          <td><span class="status-${escapeHtml(status)}">${escapeHtml(status)}</span><br><span class="sub">${escapeHtml(detail)}</span></td>
+          <td><span class="badge ${s.hasRecipe ? "badge-yes" : "badge-no"}">${s.hasRecipe ? "yes" : "none"}</span>
+            ${s.hasRecipe ? `<br><a href="#" data-recipe="${s.id}">view</a>` : ""}
+          </td>
+          <td>
+            <button data-action="replay" data-site="${s.id}" ${busy || !s.hasRecipe ? "disabled" : ""}>Replay</button>
+            <button data-action="discover" data-site="${s.id}" ${busy ? "disabled" : ""}>Discover</button>
+            <button data-action="heal" data-site="${s.id}" ${busy || !s.hasRecipe ? "disabled" : ""}>Heal</button>
+          </td>
+        `;
+        if (openRecipe === s.id) {
+          const recipeRow = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = 5;
+          td.innerHTML = `<details class="recipe" open><pre>loading…</pre></details>`;
+          recipeRow.appendChild(td);
+          fetch(`/api/recipe/${s.id}`).then((r) => r.json()).then((recipe) => {
+            const pre = td.querySelector("pre");
+            pre.textContent = JSON.stringify(recipe, null, 2);
+            pre.scrollTop = savedScroll;
+          });
+          sitesBody.appendChild(tr);
+          sitesBody.appendChild(recipeRow);
+        } else {
+          sitesBody.appendChild(tr);
+        }
+      }
+      document.getElementById("run-cycle").disabled = busy;
+    }
+
+    sitesBody.addEventListener("click", (e) => {
+      const link = e.target.closest("a[data-recipe]");
+      if (link) {
+        e.preventDefault();
+        const id = link.dataset.recipe;
+        openRecipe = openRecipe === id ? null : id;
+        refreshState();
+        return;
+      }
+      const btn = e.target.closest("button[data-action]");
+      if (btn) runAction(btn.dataset.action, btn.dataset.site);
+    });
+
+    document.getElementById("run-cycle").addEventListener("click", () => {
+      runAction("cycle", undefined, document.getElementById("force-cycle").checked);
+    });
+
+    document.getElementById("cleanup").addEventListener("click", async () => {
+      if (!confirm(
+        "Reset every site to never-run: clear registry due-dates/last-run/hash, " +
+        "DELETE all recipes, and empty downloads/ and traces/. The next run for " +
+        "any site will have to re-discover from scratch (real browser + Claude API " +
+        "call). Credentials are left alone. Continue?"
+      )) return;
+      const btn = document.getElementById("cleanup");
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/reset", { method: "POST" });
+        const body = await res.json();
+        logEl.textContent = res.ok
+          ? `reset ${body.sitesReset} site(s); downloads/ and traces/ cleared\n`
+          : `error: ${body.error}\n`;
+      } finally {
+        btn.disabled = false;
+        refreshState();
+      }
+    });
+
+    async function runAction(action, siteId, force) {
+      if ((action === "discover" || action === "heal") &&
+          !confirm(`This calls the Claude API and opens a real browser for "${siteId}". Continue?`)) {
+        return;
+      }
+      logEl.textContent = "";
+      const res = await fetch("/api/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, siteId, force }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        logEl.textContent = `error: ${body.error}`;
+        return;
+      }
+      refreshState();
+      streamRun(body.runId);
+    }
+
+    function streamRun(runId) {
+      if (currentSource) currentSource.close();
+      const source = new EventSource(`/api/stream/${runId}`);
+      currentSource = source;
+      source.onmessage = (evt) => {
+        const msg = JSON.parse(evt.data);
+        if (msg.line !== undefined) {
+          logEl.textContent += msg.line + "\n";
+          logEl.scrollTop = logEl.scrollHeight;
+        }
+        if (msg.done) {
+          logEl.textContent += `\n[${msg.status}]` + (msg.error ? ` ${msg.error}` : "") + "\n";
+          source.close();
+          refreshState();
+        }
+      };
+      source.onerror = () => source.close();
+    }
+
+    refreshState();
+    setInterval(refreshState, 4000);
+  </script>
+</body>
+</html>

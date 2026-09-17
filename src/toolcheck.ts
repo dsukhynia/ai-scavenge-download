@@ -129,7 +129,7 @@ try {
 
   const serialized = JSON.stringify(session.steps);
   check("no credential value leaked into the recipe",
-    !serialized.includes("hunter2") && !serialized.includes("acme-ops"));
+    !serialized.includes("testa"));
 
   // -------------------------------------------------------- error paths
   console.log("\nerror handling");

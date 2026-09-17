@@ -8,6 +8,7 @@
     "discover": "tsx --env-file=.env src/discover.ts",
     "replay": "tsx src/replay.ts",
     "cycle": "tsx --env-file=.env src/cycle.ts",
+    "console": "tsx --env-file=.env src/console.ts",
     "toolcheck": "tsx src/toolcheck.ts"
   },
   "dependencies": {

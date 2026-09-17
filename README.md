@@ -42,6 +42,18 @@ npm run discover -- a          # rewrites recipes/a.json from the goal alone
 npm run cycle                  # heals automatically when replay breaks
 ```
 
+## Operator console
+
+```bash
+npm run console
+```
+
+Serves a local UI at [http://localhost:4100](http://localhost:4100) for
+viewing registry state and recipes, and triggering discover/replay/heal/cycle
+on demand with live log streaming. No auth, and only one run at a time — it
+drives real browsers and real logins with real credentials, so treat it as a
+privileged local tool, not a public endpoint.
+
 ## The mock portals
 
 Three deliberately different navigation shapes, served by `mock-sites/server.ts`:
@@ -68,6 +80,7 @@ demo is triggered.
 | `npm run discover -- a`          | Re-derive a recipe from the goal                    |
 | `npx tsx src/heal.ts a`          | Force a heal and print the recipe diff              |
 | `npm run toolcheck`              | Exercise the agent's tool surface with no model     |
+| `npm run console`                | Serve the operator console on :4100                 |
 
 `toolcheck` drives the discovery tools with a scripted sequence instead of a
 model, through each tool's own schema validation. It covers recipe assembly,
@@ -128,6 +141,8 @@ src/verify.ts          magic-byte sniff, size, filename, hash dedupe
 src/heal.ts            re-discovery with a hint + recipe diff
 src/cycle.ts           the scheduler tick
 src/registry.ts        site records and due-date arithmetic
+src/console.ts         operator console server (see "Operator console" above)
+public/                operator console frontend (static, served by console.ts)
 registry.json          the registry (a Postgres table in disguise)
 recipes/               one recipe per site
 ```

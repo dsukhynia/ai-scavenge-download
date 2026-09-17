@@ -124,8 +124,14 @@ export async function replay(
   let download: DownloadInfo | undefined;
   let failure: Omit<Extract<ReplayOutcome, { ok: false }>, "ok" | "trace"> | undefined;
 
+  console.log(
+    `executing recipe for "${recipe.site_id}" — no model involved, ` +
+      `${recipe.steps.length} step(s): ${recipe.goal}`,
+  );
+
   try {
     for (const [index, step] of recipe.steps.entries()) {
+      console.log(`  ${index + 1}/${recipe.steps.length} ${describeStep(step)}`);
       try {
         const produced = await runStep(page, step, creds, recipe.site_id, downloadRoot);
         if (produced) download = produced;
@@ -186,11 +192,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const { loadRecipe } = await import("./recipe.js");
   const { verify } = await import("./verify.js");
   const recipe = await loadRecipe(siteId);
-
-  console.log(`replaying ${siteId}: ${recipe.goal}`);
-  for (const [i, s] of recipe.steps.entries()) {
-    console.log(`  ${String(i + 1).padStart(2)}. ${describeStep(s)}`);
-  }
 
   const outcome = await replay(recipe, { headless: !process.argv.includes("--headed") });
 
